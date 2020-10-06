@@ -1,0 +1,27 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches:
+      - build-branch
+      - master
+  pull_request:
+    branches:
+      - build-branch
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: configure
+      run: make arm_sdk_install TARGET=MATEKF722SE
+    - name: make
+      run: make TARGET=MATEKF722SE
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Flash Firmware
+        path: obj/*.hex
