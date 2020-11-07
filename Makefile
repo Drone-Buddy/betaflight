@@ -16,7 +16,7 @@
 #
 
 # The target to build, see VALID_TARGETS below
-TARGET    ?= STM32F405
+TARGET    ?= MATEKF722SE
 
 # Compile-time options
 OPTIONS   ?=
