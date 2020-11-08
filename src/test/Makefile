@@ -431,6 +431,9 @@ COMMON_FLAGS = \
 	-Wextra \
 	-Werror \
 	-Wno-error=unused-command-line-argument \
+	-Wno-error=c99-designator \
+	-Wno-error=reorder-init-list \
+	-Wno-error=deprecated-anon-enum-enum-conversion \
 	-ggdb3 \
 	-O0 \
 	-DUNIT_TEST \
@@ -469,7 +472,7 @@ C_FLAGS = $(COMMON_FLAGS) \
 
 # Flags passed to the C++ compiler.
 CXX_FLAGS = $(COMMON_FLAGS) \
-	-std=gnu++11
+	-std=gnu++20
 
 # Compiler flags for coverage instrumentation
 ifdef USE_COVERAGE
