@@ -284,6 +284,9 @@
 #define MSP_VTXTABLE_BAND        137    //out message         vtxTable band/channel data
 #define MSP_VTXTABLE_POWERLEVEL  138    //out message         vtxTable powerLevel data
 #define MSP_MOTOR_TELEMETRY      139    //out message         Per-motor telemetry data (RPM, packet stats, ESC temp, etc.)
+#define MSP_AUX_GPS_CONFIG       140    //out message         Auxiliary GPS config
+#define MSP_RAW_AUX_GPS          141    //out message         fix, numsat, lat, lon, alt, speed, ground course
+#define MSP_COMP_AUX_GPS         142    //out message         distance home, direction home
 
 #define MSP_SET_RAW_RC           200    //in message          8 rc chan
 #define MSP_SET_RAW_GPS          201    //in message          fix, numsat, lat, lon, alt, speed
@@ -314,6 +317,7 @@
 #define MSP_SET_GPS_RESCUE_PIDS  226    //in message          GPS Rescues's throttleP and velocity PIDS + yaw P
 #define MSP_SET_VTXTABLE_BAND    227    //in message          set vtxTable band/channel data (one band at a time)
 #define MSP_SET_VTXTABLE_POWERLEVEL 228 //in message          set vtxTable powerLevel data (one powerLevel at a time)
+#define MSP_SET_AUX_GPS_CONFIG   229   //out message          Auxiliary GPS configuration
 
 // #define MSP_BIND                 240    //in message          no param
 // #define MSP_ALARMS               242
@@ -329,6 +333,7 @@
 #define MSP_STATUS_EX            150    //out message         cycletime, errors_count, CPU load, sensor present etc
 #define MSP_UID                  160    //out message         Unique device ID
 #define MSP_GPSSVINFO            164    //out message         get Signal Strength (only U-Blox)
+#define MSP_AUXGPSSVINFO      165    //out message         get Signal Strength (only U-Blox)
 #define MSP_GPSSTATISTICS        166    //out message         get GPS debugging data
 #define MSP_MULTIPLE_MSP         230    //out message         request multiple MSPs in one request - limit is the TX buffer; returns each MSP in the order they were requested starting with length of MSP; MSPs with input arguments are not supported
 #define MSP_MODE_RANGES_EXTRA    238    //out message         Reads the extra mode range data
