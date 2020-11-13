@@ -383,6 +383,12 @@ static void validateAndFixConfig(void)
         }
 #endif
 
+        if (!featureIsConfigured(FEATURE_AUX_GPS)) {
+          if (isModeActivationConditionPresent(BOXGPSFOLLOW)) {
+              removeModeActivationCondition(BOXGPSFOLLOW);
+          }
+        }
+
         if (isModeActivationConditionPresent(BOXGPSRESCUE)) {
             removeModeActivationCondition(BOXGPSRESCUE);
         }
