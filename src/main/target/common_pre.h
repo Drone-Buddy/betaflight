@@ -334,6 +334,7 @@
 #define USE_GPS
 #define USE_GPS_NMEA
 #define USE_GPS_UBLOX
+#define USE_AUX_GPS
 #define USE_GPS_RESCUE
 #define USE_GYRO_DLPF_EXPERIMENTAL
 #define USE_OSD
