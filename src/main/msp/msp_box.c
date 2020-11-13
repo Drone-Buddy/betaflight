@@ -97,7 +97,7 @@ static const box_t boxes[CHECKBOX_ITEM_COUNT] = {
     { BOXACROTRAINER, "ACRO TRAINER", 47 },
     { BOXVTXCONTROLDISABLE, "DISABLE VTX CONTROL", 48},
     { BOXLAUNCHCONTROL, "LAUNCH CONTROL", 49 },
-    { BOXDRONEBUDDY, "DRONE BUDDY", 50 },
+    { BOXGPSFOLLOW, "GPS FOLLOW", 50 },
 };
 
 // mask of enabled IDs, calculated on startup based on enabled features. boxId_e is used as bit index
@@ -203,7 +203,6 @@ void initActiveBoxIds(void)
         BME(BOXHORIZON);
         BME(BOXHEADFREE);
         BME(BOXHEADADJ);
-        BME(BOXDRONEBUDDY);
     }
 
 #ifdef USE_MAG
@@ -218,6 +217,9 @@ void initActiveBoxIds(void)
         if (!featureIsEnabled(FEATURE_3D) && !isFixedWing()) {
             BME(BOXGPSRESCUE);
         }
+#endif
+#ifdef USE_AUX_GPS
+        BME(BOXGPSFOLLOW);
 #endif
         BME(BOXBEEPGPSCOUNT);
     }
