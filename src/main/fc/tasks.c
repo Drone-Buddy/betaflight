@@ -430,6 +430,10 @@ task_t tasks[TASK_COUNT] = {
     [TASK_GPS] = DEFINE_TASK("GPS", NULL, NULL, gpsUpdate, TASK_PERIOD_HZ(100), TASK_PRIORITY_MEDIUM), // Required to prevent buffer overruns if running at 115200 baud (115 bytes / period < 256 bytes buffer)
 #endif
 
+// #ifdef USE_AUX_GPS
+//     [TASK_AUX_GPS] = DEFINE_TASK("AUX_GPS", NULL, NULL, auxGpsUpdate, TASK_PERIOD_HZ(100), TASK_PRIORITY_MEDIUM),
+// #endif
+
 #ifdef USE_MAG
     [TASK_COMPASS] = DEFINE_TASK("COMPASS", NULL, NULL, compassUpdate,TASK_PERIOD_HZ(10), TASK_PRIORITY_LOW),
 #endif
