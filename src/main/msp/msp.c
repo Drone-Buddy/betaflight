@@ -1381,6 +1381,44 @@ static bool mspProcessOutCommand(int16_t cmdMSP, sbuf_t *dst)
        }
         break;
 
+#ifdef USE_AUX_GPS
+    case MSP_AUX_GPS_CONFIG:
+        sbufWriteU8(dst, auxGpsConfig()->provider);
+        sbufWriteU8(dst, auxGpsConfig()->sbasMode);
+        sbufWriteU8(dst, auxGpsConfig()->autoConfig);
+        sbufWriteU8(dst, auxGpsConfig()->autoBaud);
+        // Added in API version 1.43
+        sbufWriteU8(dst, auxGpsConfig()->gps_set_home_point_once);
+        sbufWriteU8(dst, auxGpsConfig()->gps_ublox_use_galileo);
+        break;
+
+    case MSP_RAW_AUX_GPS:
+        sbufWriteU8(dst, STATE(AUX_GPS_FIX));
+        sbufWriteU8(dst, auxGpsSol.numSat);
+        sbufWriteU32(dst, auxGpsSol.llh.lat);
+        sbufWriteU32(dst, auxGpsSol.llh.lon);
+        sbufWriteU16(dst, (uint16_t)constrain(auxGpsSol.llh.altCm / 100, 0, UINT16_MAX)); // alt changed from 1m to 0.01m per lsb since MSP API 1.39 by RTH. To maintain backwards compatibility compensate to 1m per lsb in MSP again.
+        sbufWriteU16(dst, auxGpsSol.groundSpeed);
+        sbufWriteU16(dst, auxGpsSol.groundCourse);
+        break;
+
+    case MSP_COMP_AUX_GPS:
+        sbufWriteU16(dst, aux_GPS_distanceToHome);
+        sbufWriteU16(dst, aux_GPS_directionToHome);
+        sbufWriteU8(dst, aux_GPS_update & 1);
+        break;
+
+    case MSP_AUXGPSSVINFO:
+        sbufWriteU8(dst, GPS_numCh);
+        for (int i = 0; i < GPS_numCh; i++) {
+            sbufWriteU8(dst, aux_GPS_svinfo_chn[i]);
+            sbufWriteU8(dst, aux_GPS_svinfo_svid[i]);
+            sbufWriteU8(dst, aux_GPS_svinfo_quality[i]);
+            sbufWriteU8(dst, aux_GPS_svinfo_cno[i]);
+        }
+        break;
+#endif
+
 #ifdef USE_GPS_RESCUE
     case MSP_GPS_RESCUE:
         sbufWriteU16(dst, gpsRescueConfig()->angle);
@@ -2319,6 +2357,20 @@ static mspResult_e mspProcessInCommand(mspDescriptor_t srcDesc, int16_t cmdMSP, 
             gpsConfigMutable()->gps_ublox_use_galileo = sbufReadU8(src);
         }
         break;
+
+#ifdef USE_AUX_GPS
+    case MSP_SET_AUX_GPS_CONFIG:
+        auxGpsConfigMutable()->provider = sbufReadU8(src);
+        auxGpsConfigMutable()->sbasMode = sbufReadU8(src);
+        auxGpsConfigMutable()->autoConfig = sbufReadU8(src);
+        auxGpsConfigMutable()->autoBaud = sbufReadU8(src);
+        if (sbufBytesRemaining(src) >= 2) {
+            // Added in API version 1.43
+            auxGpsConfigMutable()->gps_set_home_point_once = sbufReadU8(src);
+            auxGpsConfigMutable()->gps_ublox_use_galileo = sbufReadU8(src);
+        }
+        break;
+#endif
 
 #ifdef USE_GPS_RESCUE
         case MSP_SET_GPS_RESCUE:
