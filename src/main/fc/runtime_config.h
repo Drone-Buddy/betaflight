@@ -81,7 +81,6 @@ typedef enum {
     ANGLE_MODE      = (1 << 0),
     HORIZON_MODE    = (1 << 1),
     MAG_MODE        = (1 << 2),
-    DRONEBUDDY_MODE = (1 << 3),
 //    BARO_MODE       = (1 << 3),
 //    GPS_HOME_MODE   = (1 << 4),
 //    GPS_HOLD_MODE   = (1 << 5),
@@ -91,6 +90,7 @@ typedef enum {
 //    RANGEFINDER_MODE= (1 << 9),
     FAILSAFE_MODE   = (1 << 10),
     GPS_RESCUE_MODE = (1 << 11),
+    GPS_FOLLOW_MODE = (1 << 12),
 } flightModeFlags_e;
 
 extern uint16_t flightModeFlags;
@@ -105,17 +105,18 @@ extern uint16_t flightModeFlags;
    [BOXANGLE]       = LOG2(ANGLE_MODE),                  \
    [BOXHORIZON]     = LOG2(HORIZON_MODE),                \
    [BOXMAG]         = LOG2(MAG_MODE),                    \
+   [BOXGPSFOLLOW]   = LOG2(GPS_FOLLOW_MODE),             \
    [BOXHEADFREE]    = LOG2(HEADFREE_MODE),               \
    [BOXPASSTHRU]    = LOG2(PASSTHRU_MODE),               \
    [BOXFAILSAFE]    = LOG2(FAILSAFE_MODE),               \
    [BOXGPSRESCUE]   = LOG2(GPS_RESCUE_MODE),             \
-   [BOXDRONEBUDDY]  = LOG2(DRONEBUDDY_MODE),             \
 }                                                        \
 /**/
 
 typedef enum {
     GPS_FIX_HOME   = (1 << 0),
     GPS_FIX        = (1 << 1),
+    AUX_GPS_FIX = (1 << 2),
 } stateFlags_t;
 
 #define DISABLE_STATE(mask) (stateFlags &= ~(mask))
