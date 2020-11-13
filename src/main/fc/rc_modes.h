@@ -17,7 +17,6 @@
  *
  * If not, see <http://www.gnu.org/licenses/>.
  */
-
 #pragma once
 
 #include <stdbool.h>
@@ -36,7 +35,7 @@ typedef enum {
     BOXHEADFREE,
     BOXPASSTHRU,
     BOXFAILSAFE,
-    BOXDRONEBUDDY,
+    BOXGPSFOLLOW,
     BOXGPSRESCUE,
     BOXID_FLIGHTMODE_LAST = BOXGPSRESCUE,
 
