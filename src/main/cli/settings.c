@@ -64,6 +64,7 @@
 #include "io/dashboard.h"
 #include "io/gimbal.h"
 #include "io/gps.h"
+#include "io/aux_gps.h"
 #include "io/ledstrip.h"
 #include "io/serial.h"
 #include "io/vtx.h"
@@ -948,6 +949,19 @@ const clivalue_t valueTable[] = {
     { "gps_ublox_mode",             VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_GPS_UBLOX_MODE }, PG_GPS_CONFIG, offsetof(gpsConfig_t, gps_ublox_mode) },
     { "gps_set_home_point_once",    VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_GPS_CONFIG, offsetof(gpsConfig_t, gps_set_home_point_once) },
     { "gps_use_3d_speed",           VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_GPS_CONFIG, offsetof(gpsConfig_t, gps_use_3d_speed) },
+
+#ifdef USE_AUX_GPS
+    // PG_AUX_GPS_CONFIG
+    { "aux_gps_provider",            VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_GPS_PROVIDER }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, provider) },
+    { "aux_gps_sbas_mode",           VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_GPS_SBAS_MODE }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, sbasMode) },
+    { "aux_gps_sbas_integrity",      VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, sbas_integrity) }, 
+    { "aux_gps_auto_config",         VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, autoConfig) },
+    { "aux_gps_auto_baud",           VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, autoBaud) },
+    { "aux_gps_ublox_use_galileo",   VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, gps_ublox_use_galileo) },
+    { "aux_gps_ublox_mode",          VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_GPS_UBLOX_MODE }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, gps_ublox_mode) },
+    { "aux_gps_set_home_point_once", VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, gps_set_home_point_once) },
+    { "aux_gps_use_3d_speed",        VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, gps_use_3d_speed) },
+#endif
 
 #ifdef USE_GPS_RESCUE
     // PG_GPS_RESCUE
