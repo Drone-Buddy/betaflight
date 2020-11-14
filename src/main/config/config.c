@@ -56,6 +56,7 @@
 
 #include "io/beeper.h"
 #include "io/gps.h"
+#include "io/aux_gps.h"
 #include "io/ledstrip.h"
 #include "io/serial.h"
 #include "io/vtx.h"
@@ -231,6 +232,20 @@ static void validateAndFixConfig(void)
         featureDisableImmediate(FEATURE_GPS);
     }
 
+#if defined(USE_AUX_GPS)
+    const serialPortConfig_t *auxGpsSerial = findSerialPortConfig(FUNCTION_AUX_GPS);
+    if (auxGpsConfig()->provider == GPS_MSP && auxGpsSerial) {
+        serialRemovePort(auxGpsSerial->identifier);
+    }
+#endif
+    if (
+#if defined(USE_AUX_GPS)
+        auxGpsConfig()->provider != GPS_MSP && !auxGpsSerial &&
+#endif
+        true) {
+        featureDisableImmediate(FEATURE_AUX_GPS);
+    }
+
     for (unsigned i = 0; i < PID_PROFILE_COUNT; i++) {
         // Fix filter settings to handle cases where an older configurator was used that
         // allowed higher cutoff limits from previous firmware versions.
@@ -382,12 +397,13 @@ static void validateAndFixConfig(void)
             failsafeConfigMutable()->failsafe_procedure = FAILSAFE_PROCEDURE_DROP_IT;
         }
 #endif
-
+#ifdef USE_AUX_GPS
         if (!featureIsConfigured(FEATURE_AUX_GPS)) {
           if (isModeActivationConditionPresent(BOXGPSFOLLOW)) {
               removeModeActivationCondition(BOXGPSFOLLOW);
           }
         }
+#endif
 
         if (isModeActivationConditionPresent(BOXGPSRESCUE)) {
             removeModeActivationCondition(BOXGPSRESCUE);
