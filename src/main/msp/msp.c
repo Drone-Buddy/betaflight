@@ -91,6 +91,7 @@
 #include "io/flashfs.h"
 #include "io/gimbal.h"
 #include "io/gps.h"
+#include "io/aux_gps.h"
 #include "io/ledstrip.h"
 #include "io/motors.h"
 #include "io/serial.h"
