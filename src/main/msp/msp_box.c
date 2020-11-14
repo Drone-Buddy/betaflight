@@ -219,7 +219,9 @@ void initActiveBoxIds(void)
         }
 #endif
 #ifdef USE_AUX_GPS
-        BME(BOXGPSFOLLOW);
+        if (!featureIsEnabled(FEATURE_3D) && !isFixedWing() && featureIsEnabled(FEATURE_AUX_GPS)) {
+            BME(BOXGPSFOLLOW);
+        }
 #endif
         BME(BOXBEEPGPSCOUNT);
     }
