@@ -114,9 +114,10 @@ extern uint16_t flightModeFlags;
 /**/
 
 typedef enum {
-    GPS_FIX_HOME   = (1 << 0),
-    GPS_FIX        = (1 << 1),
-    AUX_GPS_FIX = (1 << 2),
+    GPS_FIX_HOME      = (1 << 0),
+    GPS_FIX           = (1 << 1),
+    AUX_GPS_FIX_HOME  = (1 << 2),
+    AUX_GPS_FIX       = (1 << 3),
 } stateFlags_t;
 
 #define DISABLE_STATE(mask) (stateFlags &= ~(mask))
