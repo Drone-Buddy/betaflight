@@ -62,6 +62,7 @@
 #include "io/beeper.h"
 #include "io/dashboard.h"
 #include "io/gps.h"
+#include "io/aux_gps.h"
 #include "io/ledstrip.h"
 #include "io/piniobox.h"
 #include "io/serial.h"
@@ -297,6 +298,10 @@ void tasksInit(void)
     setTaskEnabled(TASK_GPS, featureIsEnabled(FEATURE_GPS));
 #endif
 
+#ifdef USE_AUX_GPS
+    setTaskEnabled(TASK_AUX_GPS, featureIsEnabled(FEATURE_AUX_GPS));
+#endif
+
 #ifdef USE_MAG
     setTaskEnabled(TASK_COMPASS, sensors(SENSOR_MAG));
 #endif
@@ -430,9 +435,9 @@ task_t tasks[TASK_COUNT] = {
     [TASK_GPS] = DEFINE_TASK("GPS", NULL, NULL, gpsUpdate, TASK_PERIOD_HZ(100), TASK_PRIORITY_MEDIUM), // Required to prevent buffer overruns if running at 115200 baud (115 bytes / period < 256 bytes buffer)
 #endif
 
-// #ifdef USE_AUX_GPS
-//     [TASK_AUX_GPS] = DEFINE_TASK("AUX_GPS", NULL, NULL, auxGpsUpdate, TASK_PERIOD_HZ(100), TASK_PRIORITY_MEDIUM),
-// #endif
+#ifdef USE_AUX_GPS
+    [TASK_AUX_GPS] = DEFINE_TASK("AUX_GPS", NULL, NULL, auxGpsUpdate, TASK_PERIOD_HZ(100), TASK_PRIORITY_MEDIUM),
+#endif
 
 #ifdef USE_MAG
     [TASK_COMPASS] = DEFINE_TASK("COMPASS", NULL, NULL, compassUpdate,TASK_PERIOD_HZ(10), TASK_PRIORITY_LOW),
