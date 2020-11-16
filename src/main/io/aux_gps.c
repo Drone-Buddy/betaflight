@@ -45,7 +45,6 @@
 
 #include "io/dashboard.h"
 #include "io/aux_gps.h"
-#include "io/common_gps.h"
 #include "io/serial.h"
 
 #include "config/config.h"
@@ -263,7 +262,7 @@ static void shiftPacketLog(void)
     }
 }
 
-static void gpsNewData(uint16_t c);
+static void auxGpsNewData(uint16_t c);
 #ifdef USE_GPS_NMEA
 static bool auxGpsNewFrameNMEA(char c);
 #endif
@@ -271,7 +270,7 @@ static bool auxGpsNewFrameNMEA(char c);
 static bool auxGpsNewFrameUBLOX(uint8_t data);
 #endif
 
-static void gpsSetState(gpsState_e state)
+static void auxGpsSetState(gpsState_e state)
 {
     auxGpsData.state = state;
     auxGpsData.state_position = 0;
@@ -288,16 +287,16 @@ void auxGpsInit(void)
     memset(auxGpsPacketLog, 0x00, sizeof(auxGpsPacketLog));
 
     // init auxGpsData structure. if we're not actually enabled, don't bother doing anything else
-    gpsSetState(GPS_UNKNOWN);
+    auxGpsSetState(GPS_UNKNOWN);
 
     auxGpsData.lastMessage = millis();
 
     if (auxGpsConfig()->provider == GPS_MSP) { // no serial ports used when GPS_MSP is configured
-        gpsSetState(GPS_INITIALIZED);
+        auxGpsSetState(GPS_INITIALIZED);
         return;
     }
 
-    const serialPortConfig_t *auxGpsPortConfig = findSerialPortConfig(FUNCTION_GPS);
+    const serialPortConfig_t *auxGpsPortConfig = findSerialPortConfig(FUNCTION_AUX_GPS);
     if (!auxGpsPortConfig) {
         return;
     }
@@ -318,13 +317,13 @@ void auxGpsInit(void)
 #endif
 
     // no callback - buffer will be consumed in auxGpsUpdate()
-    auxGpsPort = openSerialPort(auxGpsPortConfig->identifier, FUNCTION_GPS, NULL, NULL, baudRates[auxGpsInitData[auxGpsData.baudrateIndex].baudrateIndex], mode, SERIAL_NOT_INVERTED);
+    auxGpsPort = openSerialPort(auxGpsPortConfig->identifier, FUNCTION_AUX_GPS, NULL, NULL, baudRates[auxGpsInitData[auxGpsData.baudrateIndex].baudrateIndex], mode, SERIAL_NOT_INVERTED);
     if (!auxGpsPort) {
         return;
     }
 
     // signal GPS "thread" to initialize when it gets to it
-    gpsSetState(GPS_INITIALIZING);
+    auxGpsSetState(GPS_INITIALIZING);
 }
 
 #ifdef USE_GPS_NMEA
@@ -350,7 +349,7 @@ void auxGpsInitNmea(void)
                auxGpsData.state_position++;
            } else {
                // we're now (hopefully) at the correct rate, next state will switch to it
-               gpsSetState(GPS_CHANGE_BAUD);
+               auxGpsSetState(GPS_CHANGE_BAUD);
            }
            break;
 #endif
@@ -373,7 +372,7 @@ void auxGpsInitNmea(void)
                serialSetBaudRate(auxGpsPort, baudRates[auxGpsInitData[auxGpsData.baudrateIndex].baudrateIndex]);
            }
 #endif
-               gpsSetState(GPS_RECEIVING_DATA);
+               auxGpsSetState(GPS_RECEIVING_DATA);
             break;
     }
 }
@@ -444,18 +443,18 @@ void auxGpsInitUblox(void)
                 auxGpsData.state_position++;
             } else {
                 // we're now (hopefully) at the correct rate, next state will switch to it
-                gpsSetState(GPS_CHANGE_BAUD);
+                auxGpsSetState(GPS_CHANGE_BAUD);
             }
             break;
         case GPS_CHANGE_BAUD:
             serialSetBaudRate(auxGpsPort, baudRates[auxGpsInitData[auxGpsData.baudrateIndex].baudrateIndex]);
-            gpsSetState(GPS_CONFIGURE);
+            auxGpsSetState(GPS_CONFIGURE);
             break;
         case GPS_CONFIGURE:
 
             // Either use specific config file for GPS or let dynamically upload config
             if ( auxGpsConfig()->autoConfig == GPS_AUTOCONFIG_OFF ) {
-                gpsSetState(GPS_RECEIVING_DATA);
+                auxGpsSetState(GPS_RECEIVING_DATA);
                 break;
             }
 
@@ -636,7 +635,7 @@ void auxGpsInitUblox(void)
 
             if (auxGpsData.messageState >= GPS_MESSAGE_STATE_INITIALIZED) {
                 // ublox should be initialised, try receiving
-                gpsSetState(GPS_RECEIVING_DATA);
+                auxGpsSetState(GPS_RECEIVING_DATA);
             }
             break;
     }
@@ -662,12 +661,12 @@ void auxGpsInitHardware(void)
     }
 }
 
-static void updateGpsIndicator(timeUs_t currentTimeUs)
+static void updateAuxGpsIndicator(timeUs_t currentTimeUs)
 {
     static uint32_t GPSLEDTime;
     if ((int32_t)(currentTimeUs - GPSLEDTime) >= 0 && (auxGpsSol.numSat >= 5)) {
         GPSLEDTime = currentTimeUs + 150000;
-        LED1_TOGGLE;
+        LED2_TOGGLE;
     }
 }
 
@@ -676,9 +675,9 @@ void auxGpsUpdate(timeUs_t currentTimeUs)
     // read out available GPS bytes
     if (auxGpsPort) {
         while (serialRxBytesWaiting(auxGpsPort))
-            gpsNewData(serialRead(auxGpsPort));
+            auxGpsNewData(serialRead(auxGpsPort));
     } else if (aux_GPS_update & GPS_MSP_UPDATE) { // GPS data received via MSP
-        gpsSetState(GPS_RECEIVING_DATA);
+        auxGpsSetState(GPS_RECEIVING_DATA);
         auxGpsData.lastMessage = millis();
         sensorsSet(SENSOR_AUX_GPS);
         onAuxGpsNewData();
@@ -706,7 +705,7 @@ void auxGpsUpdate(timeUs_t currentTimeUs)
             auxGpsData.lastMessage = millis();
             auxGpsSol.numSat = 0;
             DISABLE_STATE(AUX_GPS_FIX);
-            gpsSetState(GPS_INITIALIZING);
+            auxGpsSetState(GPS_INITIALIZING);
             break;
 
         case GPS_RECEIVING_DATA:
@@ -714,7 +713,7 @@ void auxGpsUpdate(timeUs_t currentTimeUs)
             if (millis() - auxGpsData.lastMessage > GPS_TIMEOUT) {
                 // remove GPS from capability
                 sensorsClear(SENSOR_AUX_GPS);
-                gpsSetState(GPS_LOST_COMMUNICATION);
+                auxGpsSetState(GPS_LOST_COMMUNICATION);
 #ifdef USE_GPS_UBLOX
             } else {
                 if (auxGpsConfig()->autoConfig == GPS_AUTOCONFIG_ON) { // Only if autoconfig is enabled
@@ -738,7 +737,7 @@ void auxGpsUpdate(timeUs_t currentTimeUs)
             break;
     }
     if (sensors(SENSOR_AUX_GPS)) {
-        updateGpsIndicator(currentTimeUs);
+        updateAuxGpsIndicator(currentTimeUs);
     }
     if (!ARMING_FLAG(ARMED) && !auxGpsConfig()->gps_set_home_point_once) {
         DISABLE_STATE(AUX_GPS_FIX_HOME);
@@ -750,7 +749,7 @@ void auxGpsUpdate(timeUs_t currentTimeUs)
 #endif
 }
 
-static void gpsNewData(uint16_t c)
+static void auxGpsNewData(uint16_t c)
 {
     if (!auxGpsNewFrame(c)) {
         return;
@@ -1442,9 +1441,9 @@ static bool auxGpsNewFrameUBLOX(uint8_t data)
 }
 #endif // USE_GPS_UBLOX
 
-static void gpsHandlePassthrough(uint8_t data)
+static void auxGpsHandlePassthrough(uint8_t data)
 {
-     gpsNewData(data);
+     auxGpsNewData(data);
  #ifdef USE_DASHBOARD
      if (featureIsEnabled(FEATURE_DASHBOARD)) {
          dashboardUpdate(micros());
@@ -1467,7 +1466,7 @@ void auxGpsEnablePassthrough(serialPort_t *gpsPassthroughPort)
     }
 #endif
 
-    serialPassthrough(auxGpsPort, gpsPassthroughPort, &gpsHandlePassthrough, NULL);
+    serialPassthrough(auxGpsPort, gpsPassthroughPort, &auxGpsHandlePassthrough, NULL);
 }
 
 float aux_GPS_scaleLonDown = 1.0f;  // this is used to offset the shrinking longitude as we go towards the poles
