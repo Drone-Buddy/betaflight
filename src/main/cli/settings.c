@@ -53,6 +53,7 @@
 
 #include "flight/failsafe.h"
 #include "flight/gps_rescue.h"
+#include "flight/gps_follow.h"
 #include "flight/imu.h"
 #include "flight/mixer.h"
 #include "flight/pid.h"
@@ -365,6 +366,11 @@ static const char * const lookupTableThrottleLimitType[] = {
     "OFF", "SCALE", "CLIP"
 };
 
+#ifdef USE_GPS_FOLLOW
+const char * const lookupTableFollowAltitudeMode[] = {
+    "FIXED_ALT", "CURRENT_ALT"
+};
+#endif
 
 #ifdef USE_GPS_RESCUE
 static const char * const lookupTableRescueSanityType[] = {
@@ -504,6 +510,9 @@ const lookupTableEntry_t lookupTables[] = {
     LOOKUP_TABLE_ENTRY(lookupTableGPSProvider),
     LOOKUP_TABLE_ENTRY(lookupTableGPSSBASMode),
     LOOKUP_TABLE_ENTRY(lookupTableGPSUBLOXMode),
+#ifdef USE_GPS_FOLLOW
+    LOOKUP_TABLE_ENTRY(lookupTableFollowAltitudeMode),
+#endif
 #ifdef USE_GPS_RESCUE
     LOOKUP_TABLE_ENTRY(lookupTableRescueSanityType),
     LOOKUP_TABLE_ENTRY(lookupTableRescueAltitudeMode),
@@ -952,7 +961,7 @@ const clivalue_t valueTable[] = {
 
 #ifdef USE_AUX_GPS
     // PG_AUX_GPS_CONFIG
-    { "aux_gps_provider",            VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_GPS_PROVIDER }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, provider) },
+    { "aux_gps_provider",            VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_GPS_PROVIDER }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, provider) }, 
     { "aux_gps_sbas_mode",           VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_GPS_SBAS_MODE }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, sbasMode) },
     { "aux_gps_sbas_integrity",      VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, sbas_integrity) }, 
     { "aux_gps_auto_config",         VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, autoConfig) },
@@ -961,7 +970,40 @@ const clivalue_t valueTable[] = {
     { "aux_gps_ublox_mode",          VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_GPS_UBLOX_MODE }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, gps_ublox_mode) },
     { "aux_gps_set_home_point_once", VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, gps_set_home_point_once) },
     { "aux_gps_use_3d_speed",        VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_AUX_GPS_CONFIG, offsetof(auxGpsConfig_t, gps_use_3d_speed) },
+
+#ifdef USE_GPS_FOLLOW
+    // PG_GPS_FOLLOW
+    { "gps_follow_angle",           VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 200 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, angle) },
+    { "gps_follow_initial_alt",     VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 1, 100 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, initialAltitudeM) },
+    { "gps_follow_descent_dist",    VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 1, 500 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, descentDistanceM) },
+    { "gps_follow_crosstrack_ground_speed", VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 30, 3000 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, crosstrackGroundSpeed) },
+    { "gps_follow_follow_ground_speed",     VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 30, 3000 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, followGroundSpeed) },
+    { "gps_follow_throttle_p",      VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 500 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, throttleP) },
+    { "gps_follow_throttle_i",      VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 500 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, throttleI) },
+    { "gps_follow_throttle_d",      VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 500 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, throttleD) },
+    { "gps_follow_velocity_p",      VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 500 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, velP) },
+    { "gps_follow_velocity_i",      VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 500 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, velI) },
+    { "gps_follow_velocity_d",      VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 500 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, velD) },
+    { "gps_follow_yaw_p",           VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 500 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, yawP) },
+
+    { "gps_follow_throttle_min",    VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 1000, 2000 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, throttleMin) },
+    { "gps_follow_throttle_max",    VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 1000, 2000 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, throttleMax) },
+    { "gps_follow_throttle_hover",  VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 1000, 2000 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, throttleHover) },
+    { "gps_follow_sanity_checks",   VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, sanityChecks) },
+    { "gps_follow_min_sats",        VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 5, 50 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, minSats) },
+    { "gps_follow_min_sats_aux",    VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 5, 50 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, minSatsAux) },
+    { "gps_follow_min_follow_distance",      VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 2, 10 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, minFollowDistance) },
+    { "gps_follow_allow_arming_without_fix", VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, allowArmingWithoutFix) },
+    { "gps_follow_follow_alt",      VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 2, 10 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, targetFollowAltitudeM) },
+    { "gps_follow_follow_dist",     VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 2, 10 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, targetFollowDistanceM) },
+    { "gps_follow_alt_mode",        VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_GPS_FOLLOW_ALT_MODE }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, altitudeMode) },
+    { "gps_follow_ascend_rate",     VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 50, 2500 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, ascendRate) },
+    { "gps_follow_descend_rate",    VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 50, 500 }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, descendRate) },
+#ifdef USE_MAG
+    { "gps_follow_use_mag",         VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_GPS_FOLLOW, offsetof(gpsFollowConfig_t, useMag) },
 #endif
+#endif // USE_GPS_FOLLOW
+#endif // USE_AUX_GPS
 
 #ifdef USE_GPS_RESCUE
     // PG_GPS_RESCUE
@@ -992,8 +1034,8 @@ const clivalue_t valueTable[] = {
 #ifdef USE_MAG
     { "gps_rescue_use_mag",         VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_GPS_RESCUE, offsetof(gpsRescueConfig_t, useMag) },
 #endif
-#endif
-#endif
+#endif // USE_GPS_RESCUE
+#endif // USE_GPS
 
     { "deadband",                   VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 0, 32 }, PG_RC_CONTROLS_CONFIG, offsetof(rcControlsConfig_t, deadband) },
     { "yaw_deadband",               VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 0, 100 }, PG_RC_CONTROLS_CONFIG, offsetof(rcControlsConfig_t, yaw_deadband) },
