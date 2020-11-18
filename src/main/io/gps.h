@@ -36,6 +36,11 @@ extern float dTnav;             // Delta Time in milliseconds for navigation com
 extern float GPS_scaleLonDown;  // this is used to offset the shrinking longitude as we go towards the poles
 extern int16_t nav_takeoff_bearing;
 
+#ifdef USE_GPS_FOLLOW
+extern uint16_t GPS_distanceToTarget;      // distance to target in meters
+extern int16_t GPS_directionToTarget;      // direction to target in degrees
+#endif
+
 extern gpsData_t gpsData;
 extern gpsSolutionData_t gpsSol;
 
