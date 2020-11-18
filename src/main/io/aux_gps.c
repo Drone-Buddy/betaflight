@@ -44,6 +44,7 @@
 #include "drivers/time.h"
 
 #include "io/dashboard.h"
+#include "io/gps.h"
 #include "io/aux_gps.h"
 #include "io/serial.h"
 
@@ -52,7 +53,7 @@
 
 #include "flight/imu.h"
 #include "flight/pid.h"
-#include "flight/gps_rescue.h"
+#include "flight/gps_follow.h"
 
 #include "sensors/sensors.h"
 
@@ -74,7 +75,6 @@ static char *auxGpsPacketLogChar = auxGpsPacketLog;
 // **********************
 // GPS
 // **********************
-int32_t aux_GPS_home[2];
 uint16_t aux_GPS_distanceToHome;        // distance to home point in meters
 int16_t aux_GPS_directionToHome;        // direction to home or hol point in degrees
 uint32_t aux_GPS_distanceTraveledInCm;     // distance flown since armed in centimeters
@@ -742,9 +742,14 @@ void auxGpsUpdate(timeUs_t currentTimeUs)
     if (!ARMING_FLAG(ARMED) && !auxGpsConfig()->gps_set_home_point_once) {
         DISABLE_STATE(AUX_GPS_FIX_HOME);
     }
-#if defined(USE_GPS_RESCUE)
-    if (gpsRescueIsConfigured()) {
-        updateGPSRescueState();
+// #if defined(USE_GPS_RESCUE)
+//     if (gpsRescueIsConfigured()) {
+//         updateGPSRescueState();
+//     }
+// #endif
+#if defined(USE_GPS_FOLLOW)
+    if (gpsFollowIsConfigured()) {
+        updateGPSFollowState();
     }
 #endif
 }
@@ -1546,10 +1551,10 @@ void aux_GPS_distance_cm_bearing(int32_t *currentLat1, int32_t *currentLon1, int
 
 void aux_GPS_calculateDistanceAndDirectionToHome(void)
 {
-    if (STATE(AUX_GPS_FIX_HOME)) {      // If we don't have home set, do not display anything
+    if (STATE(GPS_FIX_HOME)) {      // If we don't have home set, do not display anything
         uint32_t dist;
         int32_t dir;
-        aux_GPS_distance_cm_bearing(&auxGpsSol.llh.lat, &auxGpsSol.llh.lon, &aux_GPS_home[LAT], &aux_GPS_home[LON], &dist, &dir);
+        aux_GPS_distance_cm_bearing(&auxGpsSol.llh.lat, &auxGpsSol.llh.lon, &GPS_home[LAT], &GPS_home[LON], &dist, &dir);
         aux_GPS_distanceToHome = dist / 100;
         aux_GPS_directionToHome = dir / 100;
     } else {
@@ -1579,8 +1584,12 @@ void onAuxGpsNewData(void)
         aux_GPS_calculateDistanceTraveledVerticalSpeed(false);
     }
 
-#ifdef USE_GPS_RESCUE
-    rescueNewGpsData();
+// #ifdef USE_GPS_RESCUE
+//     rescueNewGpsData();
+// #endif
+#ifdef USE_GPS_FOLLOW
+    GPS_calculateDistanceAndDirectionToTarget();
+    followNewGpsData();
 #endif
 }
 
