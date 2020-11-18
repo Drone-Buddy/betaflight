@@ -218,8 +218,12 @@ void initActiveBoxIds(void)
             BME(BOXGPSRESCUE);
         }
 #endif
-#ifdef USE_AUX_GPS
-        if (!featureIsEnabled(FEATURE_3D) && !isFixedWing() && featureIsEnabled(FEATURE_AUX_GPS)) {
+#if defined(USE_AUX_GPS) && defined(USE_GPS_FOLLOW)
+        if (!featureIsEnabled(FEATURE_3D) 
+            && !isFixedWing() 
+            && featureIsEnabled(FEATURE_AUX_GPS)
+            && featureIsEnabled(FEATURE_GPS_FOLLOW)
+        ) {
             BME(BOXGPSFOLLOW);
         }
 #endif
