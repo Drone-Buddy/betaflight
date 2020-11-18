@@ -45,6 +45,7 @@
 
 #include "io/dashboard.h"
 #include "io/gps.h"
+#include "io/aux_gps.h"
 #include "io/serial.h"
 
 #include "config/config.h"
@@ -52,6 +53,7 @@
 
 #include "flight/imu.h"
 #include "flight/pid.h"
+#include "flight/gps_follow.h"
 #include "flight/gps_rescue.h"
 
 #include "sensors/sensors.h"
@@ -81,6 +83,11 @@ uint32_t GPS_distanceFlownInCm;     // distance flown since armed in centimeters
 int16_t GPS_verticalSpeedInCmS;     // vertical speed in cm/s
 float dTnav;             // Delta Time in milliseconds for navigation computations, updated with every good GPS read
 int16_t nav_takeoff_bearing;
+
+#ifdef USE_GPS_FOLLOW
+uint16_t GPS_distanceToTarget;      // distance to target in meters
+int16_t GPS_directionToTarget;      // direction to target in degrees
+#endif
 
 #define GPS_DISTANCE_FLOWN_MIN_SPEED_THRESHOLD_CM_S 15 // 5.4Km/h 3.35mph
 
@@ -746,6 +753,11 @@ void gpsUpdate(timeUs_t currentTimeUs)
 #if defined(USE_GPS_RESCUE)
     if (gpsRescueIsConfigured()) {
         updateGPSRescueState();
+    }
+#endif
+#if defined(USE_GPS_FOLLOW)
+    if (gpsFollowIsConfigured()) {
+        updateGPSFollowState();
     }
 #endif
 }
@@ -1559,6 +1571,27 @@ void GPS_calculateDistanceAndDirectionToHome(void)
     }
 }
 
+#ifdef USE_GPS_FOLLOW
+void GPS_calculateDistanceAndDirectionToTarget(void)
+{
+    // If target GPS has no fix do not compute anything
+    if (STATE(AUX_GPS_FIX)) {      
+        uint32_t dist;
+        int32_t dir;
+        GPS_distance_cm_bearing(
+            &gpsSol.llh.lat, &gpsSol.llh.lon, 
+            &auxGpsSol.llh.lat, &auxGpsSol.llh.lon, 
+            &dist, &dir
+        );
+        GPS_distanceToTarget = dist / 100;
+        GPS_directionToTarget = dir / 100;
+    } else {
+        GPS_distanceToTarget = 0;
+        GPS_directionToTarget = 0;
+    }
+}
+#endif
+
 void onGpsNewData(void)
 {
     if (!(STATE(GPS_FIX) && gpsSol.numSat >= 5)) {
@@ -1582,6 +1615,10 @@ void onGpsNewData(void)
 
 #ifdef USE_GPS_RESCUE
     rescueNewGpsData();
+#endif
+#ifdef USE_GPS_FOLLOW
+    GPS_calculateDistanceAndDirectionToTarget();
+    followNewGpsData();
 #endif
 }
 
