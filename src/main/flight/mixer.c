@@ -55,6 +55,7 @@
 #include "flight/failsafe.h"
 #include "flight/imu.h"
 #include "flight/gps_rescue.h"
+#include "flight/gps_follow.h"
 #include "flight/mixer.h"
 #include "flight/mixer_tricopter.h"
 #include "flight/pid.h"
@@ -941,6 +942,12 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs, uint8_t vbatPidCompensa
     }
 #endif
 
+#ifdef USE_GPS_FOLLOW
+    if (FLIGHT_MODE(GPS_FOLLOW_MODE)) {
+        throttle = gpsFollowGetThrottle();
+    }
+#endif
+
 #ifdef USE_AIRMODE_LPF
     const float unadjustedThrottle = throttle;
     throttle += pidGetAirmodeThrottleOffset();
@@ -975,6 +982,7 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs, uint8_t vbatPidCompensa
         && !featureIsEnabled(FEATURE_3D)
         && !airmodeEnabled
         && !FLIGHT_MODE(GPS_RESCUE_MODE)   // disable motor_stop while GPS Rescue is active
+        && !FLIGHT_MODE(GPS_FOLLOW_MODE)   // disable motor_stop while GPS Follow is active
         && (rcData[THROTTLE] < rxConfig()->mincheck)) {
         // motor_stop handling
         applyMotorStop();
