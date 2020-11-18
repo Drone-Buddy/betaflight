@@ -245,6 +245,11 @@ static void validateAndFixConfig(void)
         true) {
         featureDisableImmediate(FEATURE_AUX_GPS);
     }
+#if defined(USE_GPS_FOLLOW)
+    if (!featureIsEnabled(FEATURE_GPS) || !featureIsEnabled(FEATURE_AUX_GPS)) {
+        featureDisableImmediate(FEATURE_GPS_FOLLOW);
+    }
+#endif
 
     for (unsigned i = 0; i < PID_PROFILE_COUNT; i++) {
         // Fix filter settings to handle cases where an older configurator was used that
