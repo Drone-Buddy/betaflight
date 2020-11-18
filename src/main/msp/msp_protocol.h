@@ -287,6 +287,8 @@
 #define MSP_AUX_GPS_CONFIG       140    //out message         Auxiliary GPS config
 #define MSP_RAW_AUX_GPS          141    //out message         fix, numsat, lat, lon, alt, speed, ground course
 #define MSP_COMP_AUX_GPS         142    //out message         distance home, direction home
+#define MSP_GPS_FOLLOW           143    //out message         GPS Rescues's angle, initialAltitude, descentDistance, rescueGroundSpeed, sanityChecks and minSats
+#define MSP_GPS_FOLLOW_PIDS      144    //out message         GPS Rescues's throttleP and velocity PIDS + yaw P
 
 #define MSP_SET_RAW_RC           200    //in message          8 rc chan
 #define MSP_SET_RAW_GPS          201    //in message          fix, numsat, lat, lon, alt, speed
@@ -318,6 +320,8 @@
 #define MSP_SET_VTXTABLE_BAND    227    //in message          set vtxTable band/channel data (one band at a time)
 #define MSP_SET_VTXTABLE_POWERLEVEL 228 //in message          set vtxTable powerLevel data (one powerLevel at a time)
 #define MSP_SET_AUX_GPS_CONFIG   229   //out message          Auxiliary GPS configuration
+#define MSP_SET_GPS_FOLLOW       231    //in message          GPS Rescues's angle, initialAltitude, descentDistance, rescueGroundSpeed, sanityChecks and minSats
+#define MSP_SET_GPS_FOLLOW_PIDS  232    //in message          GPS Rescues's throttleP and velocity PIDS + yaw P
 
 // #define MSP_BIND                 240    //in message          no param
 // #define MSP_ALARMS               242
