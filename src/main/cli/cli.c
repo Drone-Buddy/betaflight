@@ -3296,6 +3296,12 @@ static void cliFeature(const char *cmdName, char *cmdline)
                     break;
                 }
 #endif
+#ifndef USE_GPS_FOLLOW
+                if (feature & FEATURE_GPS_FOLLOW) {
+                    cliPrintLine("unavailable");
+                    break;
+                }
+#endif
 #ifndef USE_RANGEFINDER
                 if (feature & FEATURE_RANGEFINDER) {
                     cliPrintLine("unavailable");
