@@ -79,6 +79,7 @@
 
 #include "flight/failsafe.h"
 #include "flight/gps_rescue.h"
+#include "flight/gps_follow.h"
 #include "flight/imu.h"
 #include "flight/mixer.h"
 #include "flight/pid.h"
@@ -1418,6 +1419,40 @@ static bool mspProcessOutCommand(int16_t cmdMSP, sbuf_t *dst)
             sbufWriteU8(dst, aux_GPS_svinfo_cno[i]);
         }
         break;
+
+#ifdef USE_GPS_FOLLOW
+    case MSP_GPS_FOLLOW:
+        sbufWriteU16(dst, gpsFollowConfig()->angle);
+        sbufWriteU16(dst, gpsFollowConfig()->initialAltitudeM);
+        sbufWriteU16(dst, gpsFollowConfig()->descentDistanceM);
+        sbufWriteU16(dst, gpsFollowConfig()->crosstrackGroundSpeed);
+        sbufWriteU16(dst, gpsFollowConfig()->followGroundSpeed);
+        sbufWriteU16(dst, gpsFollowConfig()->throttleMin);
+        sbufWriteU16(dst, gpsFollowConfig()->throttleMax);
+        sbufWriteU16(dst, gpsFollowConfig()->throttleHover);
+        sbufWriteU8(dst,  gpsFollowConfig()->sanityChecks);
+        sbufWriteU8(dst,  gpsFollowConfig()->minSats);
+        sbufWriteU8(dst,  gpsFollowConfig()->minSatsAux);
+        sbufWriteU16(dst, gpsFollowConfig()->minFollowDistance);
+        sbufWriteU16(dst, gpsFollowConfig()->targetFollowAltitudeM);
+        sbufWriteU16(dst, gpsFollowConfig()->targetFollowDistanceM);
+        // Added in API version 1.43
+        sbufWriteU16(dst, gpsFollowConfig()->ascendRate);
+        sbufWriteU16(dst, gpsFollowConfig()->descendRate);
+        sbufWriteU8(dst, gpsFollowConfig()->allowArmingWithoutFix);
+        sbufWriteU8(dst, gpsFollowConfig()->altitudeMode);
+        break;
+
+    case MSP_GPS_FOLLOW_PIDS:
+        sbufWriteU16(dst, gpsFollowConfig()->throttleP);
+        sbufWriteU16(dst, gpsFollowConfig()->throttleI);
+        sbufWriteU16(dst, gpsFollowConfig()->throttleD);
+        sbufWriteU16(dst, gpsFollowConfig()->velP);
+        sbufWriteU16(dst, gpsFollowConfig()->velI);
+        sbufWriteU16(dst, gpsFollowConfig()->velD);
+        sbufWriteU16(dst, gpsFollowConfig()->yawP);
+        break;
+#endif
 #endif
 
 #ifdef USE_GPS_RESCUE
@@ -2371,6 +2406,42 @@ static mspResult_e mspProcessInCommand(mspDescriptor_t srcDesc, int16_t cmdMSP, 
             auxGpsConfigMutable()->gps_ublox_use_galileo = sbufReadU8(src);
         }
         break;
+
+#ifdef USE_GPS_FOLLOW
+        case MSP_SET_GPS_FOLLOW:
+        gpsFollowConfigMutable()->angle = sbufReadU16(src);
+        gpsFollowConfigMutable()->initialAltitudeM = sbufReadU16(src);
+        gpsFollowConfigMutable()->descentDistanceM = sbufReadU16(src);
+        gpsFollowConfigMutable()->crosstrackGroundSpeed = sbufReadU16(src);
+        gpsFollowConfigMutable()->followGroundSpeed = sbufReadU16(src);
+        gpsFollowConfigMutable()->throttleMin = sbufReadU16(src);
+        gpsFollowConfigMutable()->throttleMax = sbufReadU16(src);
+        gpsFollowConfigMutable()->throttleHover = sbufReadU16(src);
+        gpsFollowConfigMutable()->sanityChecks = sbufReadU8(src);
+        gpsFollowConfigMutable()->minSats = sbufReadU8(src);
+        gpsFollowConfigMutable()->minSatsAux = sbufReadU8(src);
+        gpsFollowConfigMutable()->minFollowDistance = sbufReadU16(src);
+        gpsFollowConfigMutable()->targetFollowAltitudeM = sbufReadU16(src);
+        gpsFollowConfigMutable()->targetFollowDistanceM = sbufReadU16(src);
+        if (sbufBytesRemaining(src) >= 6) {
+            // Added in API version 1.43
+            gpsFollowConfigMutable()->ascendRate = sbufReadU16(src);
+            gpsFollowConfigMutable()->descendRate = sbufReadU16(src);
+            gpsFollowConfigMutable()->allowArmingWithoutFix = sbufReadU8(src);
+            gpsFollowConfigMutable()->altitudeMode = sbufReadU8(src);
+        }
+        break;
+
+    case MSP_SET_GPS_FOLLOW_PIDS:
+        gpsFollowConfigMutable()->throttleP = sbufReadU16(src);
+        gpsFollowConfigMutable()->throttleI = sbufReadU16(src);
+        gpsFollowConfigMutable()->throttleD = sbufReadU16(src);
+        gpsFollowConfigMutable()->velP = sbufReadU16(src);
+        gpsFollowConfigMutable()->velI = sbufReadU16(src);
+        gpsFollowConfigMutable()->velD = sbufReadU16(src);
+        gpsFollowConfigMutable()->yawP = sbufReadU16(src);
+        break;
+#endif
 #endif
 
 #ifdef USE_GPS_RESCUE
