@@ -881,7 +881,7 @@ STATIC_UNIT_TESTED FAST_CODE_NOINLINE float pidLevel(int axis, const pidProfile_
 #endif
     angle = constrainf(angle, -pidProfile->levelAngleLimit, pidProfile->levelAngleLimit);
     const float errorAngle = angle - ((attitude.raw[axis] - angleTrim->raw[axis]) / 10.0f);
-    if (FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(GPS_RESCUE_MODE)) {
+    if (FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(GPS_RESCUE_MODE) || FLIGHT_MODE(GPS_FOLLOW_MODE)) {
         // ANGLE mode - control is angle based
         currentPidSetpoint = errorAngle * levelGain;
     } else {
@@ -943,7 +943,7 @@ static void detectAndSetCrashRecovery(
 {
     // if crash recovery is on and accelerometer enabled and there is no gyro overflow, then check for a crash
     // no point in trying to recover if the crash is so severe that the gyro overflows
-    if ((crash_recovery || FLIGHT_MODE(GPS_RESCUE_MODE)) && !gyroOverflowDetected()) {
+    if ((crash_recovery || FLIGHT_MODE(GPS_RESCUE_MODE) || FLIGHT_MODE(GPS_FOLLOW_MODE)) && !gyroOverflowDetected()) {
         if (ARMING_FLAG(ARMED)) {
             if (getMotorMixRange() >= 1.0f && !inCrashRecoveryMode
                 && fabsf(delta) > crashDtermThreshold
@@ -992,7 +992,7 @@ static FAST_CODE_NOINLINE float applyAcroTrainer(int axis, const rollAndPitchTri
 {
     float ret = setPoint;
 
-    if (!FLIGHT_MODE(ANGLE_MODE) && !FLIGHT_MODE(HORIZON_MODE) && !FLIGHT_MODE(GPS_RESCUE_MODE)) {
+    if (!FLIGHT_MODE(ANGLE_MODE) && !FLIGHT_MODE(HORIZON_MODE) && !FLIGHT_MODE(GPS_RESCUE_MODE) && !FLIGHT_MODE(GPS_FOLLOW_MODE)) {
         bool resetIterm = false;
         float projectedAngle = 0;
         const int setpointSign = acroTrainerSign(setPoint);
@@ -1306,7 +1306,7 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
 #if defined(USE_ACC)
     const bool gpsRescueIsActive = FLIGHT_MODE(GPS_RESCUE_MODE);
     levelMode_e levelMode;
-    if (FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(HORIZON_MODE) || gpsRescueIsActive) {
+    if (FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(HORIZON_MODE) || gpsRescueIsActive || FLIGHT_MODE(GPS_FOLLOW_MODE)) {
         if (levelRaceMode && !gpsRescueIsActive) {
             levelMode = LEVEL_MODE_R;
         } else {
