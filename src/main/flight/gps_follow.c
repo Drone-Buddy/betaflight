@@ -169,7 +169,7 @@ PG_RESET_TEMPLATE(gpsFollowConfig_t, gpsFollowConfig,
     .sanityChecks = true,
     .minSats = 8,
     .minSatsAux = 8,
-    .minFollowDistance = 5,
+    .minFollowDistance = 5,         // actually don't need this -> just use targetFollowDistanceM
     .allowArmingWithoutFix = false,
     .useMag = GPS_FOLLOW_USE_MAG,
     .targetFollowAltitudeM = 5,  // this is the altitude at which we end approach
@@ -836,7 +836,7 @@ bool gpsFollowIsAvailable(void)
 
 bool gpsFollowIsDisabled(void)
 {
-    return (!STATE(AUX_GPS_FIX));
+    return (!STATE(GPS_FIX) && !STATE(AUX_GPS_FIX));
 }
 
 #ifdef USE_MAG
