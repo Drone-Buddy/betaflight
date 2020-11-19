@@ -901,6 +901,7 @@ bool processRx(timeUs_t currentTimeUs)
         && !featureIsEnabled(FEATURE_3D)
         && !airmodeIsEnabled()
         && !FLIGHT_MODE(GPS_RESCUE_MODE)  // disable auto-disarm when GPS Rescue is active
+        && !FLIGHT_MODE(GPS_FOLLOW_MODE)  // disable auto-disarm when GPS Rescue is active
     ) {
         if (isUsingSticksForArming()) {
             if (throttleStatus == THROTTLE_LOW) {
@@ -992,6 +993,14 @@ bool processRx(timeUs_t currentTimeUs)
         }
     } else {
         DISABLE_FLIGHT_MODE(GPS_RESCUE_MODE);
+    }
+#endif
+
+#ifdef USE_GPS_FOLLOW
+    if (ARMING_FLAG(ARMED) && IS_RC_MODE_ACTIVE(BOXGPSFOLLOW)) {
+        ENABLE_FLIGHT_MODE(GPS_FOLLOW_MODE);
+    } else {
+        DISABLE_FLIGHT_MODE(GPS_FOLLOW_MODE);
     }
 #endif
 
@@ -1105,6 +1114,7 @@ static FAST_CODE void subTaskPidController(timeUs_t currentTimeUs)
         && !flipOverAfterCrashActive
         && !runawayTakeoffTemporarilyDisabled
         && !FLIGHT_MODE(GPS_RESCUE_MODE)   // disable Runaway Takeoff triggering if GPS Rescue is active
+        && !FLIGHT_MODE(GPS_FOLLOW_MODE)   // disable Runaway Takeoff triggering if GPS Rescue is active
         && (!featureIsEnabled(FEATURE_MOTOR_STOP) || airmodeIsEnabled() || (calculateThrottleStatus() != THROTTLE_LOW))) {
 
         if (((fabsf(pidData[FD_PITCH].Sum) >= RUNAWAY_TAKEOFF_PIDSUM_THRESHOLD)
