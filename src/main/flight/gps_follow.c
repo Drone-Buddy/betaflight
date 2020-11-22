@@ -183,7 +183,7 @@ static uint16_t followThrottle;
 static float    followYaw;
 
 int32_t   gpsFollowAngle[ANGLE_INDEX_COUNT] = { 0, 0 };
-float       alitudeError = 0.0;
+float     alitudeError = 0.0;
 
 #ifndef USE_GPS_RESCUE
 throttle_s throttle;
@@ -232,8 +232,8 @@ static void idleTasks()
     // proper altitude offset yet
     if (!isAltitudeOffset()) {
         return;
-    }
-
+    } 
+ 
     gpsFollowAngle[AI_PITCH] = 0;
     gpsFollowAngle[AI_ROLL] = 0;
 
@@ -251,7 +251,9 @@ static void idleTasks()
     // FIXME: only take samples when acceleration is low
     //
     const float ct = getCosTiltAngle();
-    if (ct > 0.5 && ct < 0.96
+    const float accZ = ABS(acc.accADC[Z]) * acc.dev.acc_1G_rec;
+    if (accZ < 0.1                  // acc in Z axis is less than 0.1G
+        && ct > 0.5 && ct < 1.00    // 0 to 45 degrees zenith angle
         && throttleSamples < 1E6
         && followThrottle > 1070
     ) {
@@ -483,8 +485,8 @@ static void performSanityChecks()
     if (followState.phase == FOLLOW_CROSSTRACK) {
         // If we're moving at less than 150 cm/s and the target 
         // is moving faster than 150 cm/s then we're stalled
-        bool targetMoving = followState.sensor.targetGroundSpeed > 150;
-        bool craftMoving = followState.sensor.groundSpeed > 150;
+        bool targetMoving = followState.sensor.targetGroundSpeed > 50;
+        bool craftMoving = followState.sensor.groundSpeed > 50;
         bool isStalled = targetMoving && !craftMoving;
         secondsStalled = constrain(
             secondsStalled + (isStalled ? 1 : -1),
@@ -497,10 +499,10 @@ static void performSanityChecks()
         }
 
         // If we're moving away from the target and not within a grace 
-        // range of 2x the minFollowDistance then we're flying away
+        // range of minFollowDistance then we're flying away
         bool isWithinGrace = 
             followState.sensor.distanceToTargetM 
-            > 2.0f * gpsFollowConfig()->minFollowDistance;
+            > gpsFollowConfig()->minFollowDistance;
         bool isFlyingAway = 
             lastDistanceToTargetM < followState.sensor.distanceToTargetM;
         secondsFlyingAway = constrain(
