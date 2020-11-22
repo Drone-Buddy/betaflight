@@ -244,18 +244,26 @@ static void idleTasks()
     // active throttle is from min_check through PWM_RANGE_MAX. Currently adjusting for this
     // in gpsRescueGetThrottle() but it would be better handled here.
 
-    const float ct = getCosTiltAngle();
-    if (ct > 0.5 && ct < 0.96 && throttleSamples < 1E6 && rescueThrottle > 1070) { //5 to 45 degrees tilt
-        //TO DO: only sample when acceleration is low
-        uint16_t adjustedThrottle = 1000 + (rescueThrottle - PWM_RANGE_MIN) * ct;
-        if (throttleSamples == 0) {
-            averageThrottle = adjustedThrottle;
-        } else {
-            averageThrottle += (adjustedThrottle - averageThrottle) / (throttleSamples + 1);
+// Only calculate hoverThrottle if GPS_FOLLOW is disabled.
+// Otherwise, allow it to.
+#ifdef USE_GPS_FOLLOW
+    if (!gpsFollowIsConfigured()) {
+#endif
+        const float ct = getCosTiltAngle();
+        if (ct > 0.5 && ct < 0.96 && throttleSamples < 1E6 && rescueThrottle > 1070) { //5 to 45 degrees tilt
+            //TO DO: only sample when acceleration is low
+            uint16_t adjustedThrottle = 1000 + (rescueThrottle - PWM_RANGE_MIN) * ct;
+            if (throttleSamples == 0) {
+                averageThrottle = adjustedThrottle;
+            } else {
+                averageThrottle += (adjustedThrottle - averageThrottle) / (throttleSamples + 1);
+            }
+            hoverThrottle = lrintf(averageThrottle);
+            throttleSamples++;
         }
-        hoverThrottle = lrintf(averageThrottle);
-        throttleSamples++;
+#ifdef USE_GPS_FOLLOW
     }
+#endif
 }
 
 // Very similar to maghold function on betaflight/cleanflight
