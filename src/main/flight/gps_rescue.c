@@ -50,6 +50,7 @@
 
 #include "sensors/acceleration.h"
 
+#include "gps_follow.h"
 #include "gps_rescue.h"
 
 typedef enum {
